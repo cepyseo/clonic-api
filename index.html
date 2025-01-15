@@ -5,40 +5,35 @@
 </head>
 <body>
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const prompt = urlParams.get('prompt') || '';
-    const model = urlParams.get('model') || 'meta-llama/llama-3.2-3b-instruct:free';
-
-    if (prompt) {
-        const API_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://openrouter.ai/api/v1/chat/completions');
+    (async function() {
+        const params = new URLSearchParams(window.location.search);
+        const userPrompt = params.get('prompt');
+        const userModel = params.get('model') || 'meta-llama/llama-3.2-3b-instruct:free';
         
-        fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer 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',
-                'HTTP-Referer': 'https://cepyseo.github.io/clonic-api/',
-                'X-Title': 'CepyAPI',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [{
-                    role: 'user',
-                    content: prompt
-                }],
-                stream: false
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.write(JSON.stringify(data, null, 2));
-        })
-        .catch(error => {
-            document.write('Error: ' + error.message);
-        });
-    } else {
-        document.write('No prompt provided');
-    }
+        const options = {
+            model: userModel,
+            messages: [{
+                role: "user",
+                content: userPrompt
+            }]
+        };
+
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(options)
+            });
+
+            const result = await response.json();
+            document.write(JSON.stringify(result, null, 2));
+        } catch(err) {
+            document.write(err.toString());
+        }
+    })();
 </script>
 </body>
 </html>
