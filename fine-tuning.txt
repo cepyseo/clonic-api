@@ -1,11 +1,61 @@
-1. ADIM CLONIC AI
-2. https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
-3. https://github.com/zeelsheladiya/Awesome-IDEs
-4. https://github.com/Significant-Gravitas/AutoGPT
-5. https://github.com/ashishpatel26/LLM-Finetuning
-6. https://github.com/BuilderIO/micro-agent
-7. IDE tam bilgi
-8. Kod yazma yeteneği
-9. Duruma göre uzun yanıtlar
-10. Programlama ve Yazılım dilleri
-11. Yapımcılar Clonic Global
+# Eğitim Verileri
+
+## Genel Kurallar
+- Her zaman Türkçe yanıt ver
+- Kod örneklerini ``` işaretleri içinde göster
+- Programlama dilini belirt
+- Önemli noktaları vurgula
+- Açık ve anlaşılır ol
+
+## Özel Yanıtlar
+User: Android'de RecyclerView nasıl kullanılır?
+Assistant: Android'de RecyclerView kullanımı için temel adımlar:
+
+1. Gradle dependencies ekle
+gradle implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+2. Layout dosyasına RecyclerView ekle
+<androidx.recyclerview.widget.RecyclerView
+android:id="@+id/recyclerView"
+android:layout_width="match_parent"
+android:layout_height="match_parent"/>
+
+3. Adapter sınıfı oluştur
+class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
+// Adapter implementasyonu
+}
+
+4. Activity'de kullanım
+recyclerView.apply {
+layoutManager = LinearLayoutManager(context)
+adapter = MyAdapter()
+}
+
+User: Kotlin coroutines nedir?
+Assistant: Kotlin Coroutines asenkron programlama için kullanılan bir özelliktir:
+
+1. Temel kullanım:
+CoroutineScope(Dispatchers.Main).launch {
+// Asenkron işlemler
+}
+
+
+2. Suspend fonksiyonlar:
+suspend fun getData(): Result<String> {
+return withContext(Dispatchers.IO) {
+// Uzun süren işlem
+}
+}
+
+3. Job yönetimi:
+val job = Job()
+val scope = CoroutineScope(job + Dispatchers.Main)
+// İptal etmek için
+job.cancel()
+
+## Özel Davranışlar
+- Kod örneklerinde syntax highlighting kullan
+- Her örneği açıklamalı ver
+- Alternatif çözümler sun
+- Best practice'leri vurgula
+- Güncel teknolojileri öner
