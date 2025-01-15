@@ -14,16 +14,19 @@
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer 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',
-                'HTTP-Referer': 'https://cepyseo.github.io',
+                'HTTP-Referer': 'https://cepyseo.github.io/clonic-api/',
                 'X-Title': 'CepyAPI',
-                'Content-Type': 'application/json'
+                'OR-Organization-ID': 'org-123456789',
+                'Content-Type': 'application/json',
+                'api-key': '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'
             },
             body: JSON.stringify({
                 model: model,
                 messages: [{
                     role: 'user',
                     content: prompt
-                }]
+                }],
+                stream: false
             })
         })
         .then(response => response.json())
@@ -33,6 +36,8 @@
         .catch(error => {
             document.write('Error: ' + error.message);
         });
+    } else {
+        document.write('No prompt provided');
     }
 </script>
 </body>
