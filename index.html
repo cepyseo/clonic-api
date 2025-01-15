@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const prompt = urlParams.get('prompt') || '';
+    const model = urlParams.get('model') || 'meta-llama/llama-3.2-3b-instruct:free';
+
+    if (prompt) {
+        fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer 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',
+                'HTTP-Referer': 'https://cepyseo.github.io',
+                'X-Title': 'CepyAPI',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{
+                    role: 'user',
+                    content: prompt
+                }]
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.write(JSON.stringify(data, null, 2));
+        })
+        .catch(error => {
+            document.write('Error: ' + error.message);
+        });
+    }
+</script>
+</body>
+</html>
