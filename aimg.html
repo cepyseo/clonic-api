@@ -3,8 +3,24 @@
 const urlParams = new URLSearchParams(window.location.search);
 const prompt = urlParams.get('prompt');
 
+// Form data oluştur
+const formData = new FormData();
+formData.append('image', prompt);
+
+// API yanıtı
 const apiResponse = {
-    image_url: `https://ai-api.magicstudio.com/api/ai-art-generator?prompt=${encodeURIComponent(prompt)}`,
+    endpoint: "https://ai-api.magicstudio.com/api/remove-background",
+    request: {
+        method: "POST",
+        headers: {
+            "Content-Type": "multipart/form-data",
+            "Accept": "application/json, text/plain, */*",
+            "Origin": "https://magicstudio.com",
+            "Referer": "https://magicstudio.com/background-remover/editor/",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 14; V2336) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.201 Mobile Safari/537.36"
+        },
+        body: formData
+    },
     status: prompt ? "success" : "error",
     timestamp: new Date().toISOString()
 };
