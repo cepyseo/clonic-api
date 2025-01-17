@@ -76,6 +76,17 @@
             text-align: center;
             margin: 20px 0;
         }
+        #error-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +98,7 @@
     </div>
 
     <div id="loading">Yükleniyor...</div>
+    <div id="error-message"></div>
 
     <div id="result">
         <div class="creator-info">
@@ -125,10 +137,19 @@
     </div>
 
     <script>
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
         async function downloadMedia() {
             const url = document.getElementById('urlInput').value;
             if (!url) {
-                alert('Lütfen bir URL girin');
+                showError('Lütfen bir URL girin');
                 return;
             }
 
@@ -137,53 +158,78 @@
             document.getElementById('result').style.display = 'none';
 
             try {
-                // CORS proxy kullanarak API'ye istek at
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                // CORS proxy ekleyerek API'ye istek at
+                const corsProxy = 'https://api.allorigins.win/raw?url=';
                 const apiUrl = `https://tele-social.vercel.app/down?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl + apiUrl, {
+                const response = await fetch(corsProxy + encodeURIComponent(apiUrl), {
                     method: 'GET',
                     headers: {
-                        'Origin': window.location.origin,
+                        'Content-Type': 'application/json'
                     }
                 });
+
+                if (response.status === 403) {
+                    showError('Erişim izni reddedildi. Lütfen daha sonra tekrar deneyin.');
+                    return;
+                }
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
+                console.log('API Response:', data); // Debug için
 
-                if (data.status) {
+                if (data && data.status) {
                     // Sonuçları göster
                     document.getElementById('result').style.display = 'block';
                     
-                    // Creator bilgilerini güncelle
-                    document.getElementById('profilePhoto').src = data.creator.profile_photo;
-                    document.getElementById('creatorName').textContent = data.creator.name;
-                    document.getElementById('username').textContent = '@' + data.creator.username;
+                    // Creator bilgilerini güvenli şekilde güncelle
+                    if (data.creator) {
+                        document.getElementById('profilePhoto').src = data.creator.profile_photo || '';
+                        document.getElementById('creatorName').textContent = data.creator.name || 'İsimsiz';
+                        document.getElementById('username').textContent = data.creator.username ? '@' + data.creator.username : '';
+                    }
 
-                    // İstatistikleri güncelle
-                    document.getElementById('views').textContent = data.details.total_views;
-                    document.getElementById('likes').textContent = data.details.total_likes;
-                    document.getElementById('comments').textContent = data.details.total_comment;
-                    document.getElementById('shares').textContent = data.details.total_share;
-                    document.getElementById('downloads').textContent = data.details.total_download;
-                    document.getElementById('duration').textContent = data.details.video_duration;
+                    // İstatistikleri güvenli şekilde güncelle
+                    if (data.details) {
+                        document.getElementById('views').textContent = data.details.total_views || '0';
+                        document.getElementById('likes').textContent = data.details.total_likes || '0';
+                        document.getElementById('comments').textContent = data.details.total_comment || '0';
+                        document.getElementById('shares').textContent = data.details.total_share || '0';
+                        document.getElementById('downloads').textContent = data.details.total_download || '0';
+                        document.getElementById('duration').textContent = data.details.video_duration || '0:00';
+                    }
 
-                    // İndirme linklerini güncelle
+                    // İndirme linklerini güvenli şekilde güncelle
                     const videoLink = document.getElementById('videoLink');
                     const audioLink = document.getElementById('audioLink');
                     
-                    videoLink.href = data.data.video;
-                    audioLink.href = data.data.audio;
+                    if (data.data) {
+                        if (data.data.video) {
+                            videoLink.href = data.data.video;
+                            videoLink.style.display = 'inline-block';
+                        } else {
+                            videoLink.style.display = 'none';
+                        }
+                        
+                        if (data.data.audio) {
+                            audioLink.href = data.data.audio;
+                            audioLink.style.display = 'inline-block';
+                        } else {
+                            audioLink.style.display = 'none';
+                        }
+                    } else {
+                        videoLink.style.display = 'none';
+                        audioLink.style.display = 'none';
+                    }
                 } else {
-                    alert('Medya indirilemedi. Lütfen URL\'i kontrol edin.');
+                    showError('Medya bilgileri alınamadı. Lütfen URL\'i kontrol edin.');
                 }
             } catch (error) {
-                alert('Bir hata oluştu: ' + error.message);
+                showError('Bir hata oluştu: ' + error.message);
                 console.error('Hata detayı:', error);
             } finally {
-                // Loading gizle
                 document.getElementById('loading').style.display = 'none';
             }
         }
