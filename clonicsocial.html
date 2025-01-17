@@ -80,12 +80,15 @@
             display: none;
             position: fixed;
             top: 20px;
-            right: 20px;
-            background-color: #ff4444;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
             color: white;
             padding: 15px;
             border-radius: 5px;
             z-index: 1000;
+            text-align: center;
+            min-width: 300px;
         }
     </style>
 </head>
@@ -158,20 +161,15 @@
             document.getElementById('result').style.display = 'none';
 
             try {
-                // CORS proxy ekleyerek API'ye istek at
-                const corsProxy = 'https://api.allorigins.win/raw?url=';
+                // CORS proxy'yi kaldırıp doğrudan API'ye istek atalım
                 const apiUrl = `https://tele-social.vercel.app/down?url=${encodeURIComponent(url)}`;
-                const response = await fetch(corsProxy + encodeURIComponent(apiUrl), {
+                const response = await fetch(apiUrl, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     }
                 });
-
-                if (response.status === 403) {
-                    showError('Erişim izni reddedildi. Lütfen daha sonra tekrar deneyin.');
-                    return;
-                }
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -180,51 +178,41 @@
                 const data = await response.json();
                 console.log('API Response:', data); // Debug için
 
-                if (data && data.status) {
+                // API yanıtı başarılıysa
+                if (data) {
                     // Sonuçları göster
                     document.getElementById('result').style.display = 'block';
                     
-                    // Creator bilgilerini güvenli şekilde güncelle
-                    if (data.creator) {
-                        document.getElementById('profilePhoto').src = data.creator.profile_photo || '';
-                        document.getElementById('creatorName').textContent = data.creator.name || 'İsimsiz';
-                        document.getElementById('username').textContent = data.creator.username ? '@' + data.creator.username : '';
-                    }
+                    // Temel bilgileri göster
+                    document.getElementById('profilePhoto').src = 'https://via.placeholder.com/50'; // Varsayılan profil resmi
+                    document.getElementById('creatorName').textContent = 'Video Başlığı';
+                    document.getElementById('username').textContent = 'Kullanıcı';
 
-                    // İstatistikleri güvenli şekilde güncelle
-                    if (data.details) {
-                        document.getElementById('views').textContent = data.details.total_views || '0';
-                        document.getElementById('likes').textContent = data.details.total_likes || '0';
-                        document.getElementById('comments').textContent = data.details.total_comment || '0';
-                        document.getElementById('shares').textContent = data.details.total_share || '0';
-                        document.getElementById('downloads').textContent = data.details.total_download || '0';
-                        document.getElementById('duration').textContent = data.details.video_duration || '0:00';
-                    }
+                    // İstatistikleri temizle
+                    document.getElementById('views').textContent = '0';
+                    document.getElementById('likes').textContent = '0';
+                    document.getElementById('comments').textContent = '0';
+                    document.getElementById('shares').textContent = '0';
+                    document.getElementById('downloads').textContent = '0';
+                    document.getElementById('duration').textContent = '0:00';
 
-                    // İndirme linklerini güvenli şekilde güncelle
+                    // İndirme linklerini güncelle
                     const videoLink = document.getElementById('videoLink');
                     const audioLink = document.getElementById('audioLink');
-                    
-                    if (data.data) {
-                        if (data.data.video) {
-                            videoLink.href = data.data.video;
-                            videoLink.style.display = 'inline-block';
-                        } else {
-                            videoLink.style.display = 'none';
-                        }
-                        
-                        if (data.data.audio) {
-                            audioLink.href = data.data.audio;
-                            audioLink.style.display = 'inline-block';
-                        } else {
-                            audioLink.style.display = 'none';
-                        }
+
+                    if (data.url) {
+                        videoLink.href = data.url;
+                        videoLink.style.display = 'inline-block';
+                        audioLink.style.display = 'none'; // Ses indirme şimdilik gizli
                     } else {
                         videoLink.style.display = 'none';
                         audioLink.style.display = 'none';
                     }
+
+                    // Başarı mesajı göster
+                    showError('Video başarıyla bulundu! İndirme linkine tıklayabilirsiniz.');
                 } else {
-                    showError('Medya bilgileri alınamadı. Lütfen URL\'i kontrol edin.');
+                    showError('Video bulunamadı. Lütfen URL\'i kontrol edin.');
                 }
             } catch (error) {
                 showError('Bir hata oluştu: ' + error.message);
