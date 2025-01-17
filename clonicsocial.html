@@ -90,7 +90,36 @@
             text-align: center;
             min-width: 300px;
         }
+        .download-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .video-button {
+            background-color: #ff0000;
+        }
+        .audio-button {
+            background-color: #1db954;
+        }
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <h1>Clonic Social Downloader</h1>
@@ -161,65 +190,81 @@
             document.getElementById('result').style.display = 'none';
 
             try {
-                // CORS proxy'yi kaldırıp doğrudan API'ye istek atalım
-                const apiUrl = `https://tele-social.vercel.app/down?url=${encodeURIComponent(url)}`;
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                const response = await fetch(`http://localhost:3000/proxy?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
-                console.log('API Response:', data); // Debug için
+                
+                // Veri kontrolü yap
+                if (!data || !data.status) {
+                    throw new Error('Geçersiz API yanıtı');
+                }
 
-                // API yanıtı başarılıysa
-                if (data) {
-                    // Sonuçları göster
-                    document.getElementById('result').style.display = 'block';
-                    
-                    // Temel bilgileri göster
-                    document.getElementById('profilePhoto').src = 'https://via.placeholder.com/50'; // Varsayılan profil resmi
-                    document.getElementById('creatorName').textContent = 'Video Başlığı';
-                    document.getElementById('username').textContent = 'Kullanıcı';
+                // Sonuçları göster
+                document.getElementById('result').style.display = 'block';
+                
+                // Temel bilgileri güvenli şekilde göster
+                if (data.creator) {
+                    const profilePhoto = data.creator.profile_photo ? decodeURIComponent(data.creator.profile_photo) : 'https://via.placeholder.com/50';
+                    document.getElementById('profilePhoto').src = profilePhoto;
+                    document.getElementById('creatorName').textContent = data.creator.name || 'İsimsiz';
+                    document.getElementById('username').textContent = data.creator.username ? '@' + data.creator.username : '';
+                }
 
-                    // İstatistikleri temizle
-                    document.getElementById('views').textContent = '0';
-                    document.getElementById('likes').textContent = '0';
-                    document.getElementById('comments').textContent = '0';
-                    document.getElementById('shares').textContent = '0';
-                    document.getElementById('downloads').textContent = '0';
-                    document.getElementById('duration').textContent = '0:00';
+                // İstatistikleri güvenli şekilde güncelle
+                if (data.details) {
+                    document.getElementById('views').textContent = (data.details.total_views || 0).toLocaleString();
+                    document.getElementById('likes').textContent = (data.details.total_likes || 0).toLocaleString();
+                    document.getElementById('comments').textContent = (data.details.total_comment || 0).toLocaleString();
+                    document.getElementById('shares').textContent = (data.details.total_share || 0).toLocaleString();
+                    document.getElementById('downloads').textContent = (data.details.total_download || 0).toLocaleString();
+                    document.getElementById('duration').textContent = `${data.details.video_duration || 0} saniye`;
+                }
 
-                    // İndirme linklerini güncelle
-                    const videoLink = document.getElementById('videoLink');
-                    const audioLink = document.getElementById('audioLink');
+                // İndirme butonlarını güvenli şekilde güncelle
+                const downloadContainer = document.querySelector('.download-links');
+                downloadContainer.innerHTML = ''; // Mevcut butonları temizle
 
-                    if (data.url) {
-                        videoLink.href = data.url;
-                        videoLink.style.display = 'inline-block';
-                        audioLink.style.display = 'none'; // Ses indirme şimdilik gizli
-                    } else {
-                        videoLink.style.display = 'none';
-                        audioLink.style.display = 'none';
+                if (data.data) {
+                    // Video indirme butonu
+                    if (data.data.video) {
+                        const videoBtn = createDownloadButton(
+                            'Video İndir',
+                            data.data.video,
+                            'video'
+                        );
+                        downloadContainer.appendChild(videoBtn);
                     }
 
-                    // Başarı mesajı göster
-                    showError('Video başarıyla bulundu! İndirme linkine tıklayabilirsiniz.');
-                } else {
-                    showError('Video bulunamadı. Lütfen URL\'i kontrol edin.');
+                    // Ses indirme butonu
+                    if (data.data.audio) {
+                        const audioBtn = createDownloadButton(
+                            'Ses İndir',
+                            data.data.audio,
+                            'audio'
+                        );
+                        downloadContainer.appendChild(audioBtn);
+                    }
                 }
+
+                showError(`${data.platform || 'Medya'} başarıyla bulundu! İndirme seçeneklerini kullanabilirsiniz.`);
             } catch (error) {
                 showError('Bir hata oluştu: ' + error.message);
                 console.error('Hata detayı:', error);
+                document.getElementById('result').style.display = 'none';
             } finally {
                 document.getElementById('loading').style.display = 'none';
             }
+        }
+
+        function createDownloadButton(text, url, type) {
+            const button = document.createElement('a');
+            button.href = url;
+            button.className = `download-button ${type}-button`;
+            button.target = '_blank';
+            button.innerHTML = `
+                <i class="fas fa-download"></i>
+                ${text}
+            `;
+            return button;
         }
     </script>
 </body>
