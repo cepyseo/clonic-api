@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const prompt = urlParams.get('prompt');
+
+const apiResponse = {
+    image_url: `https://ai-api.magicstudio.com/api/ai-art-generator?prompt=${encodeURIComponent(prompt)}`,
+    status: prompt ? "success" : "error",
+    timestamp: new Date().toISOString()
+};
+
+document.write(JSON.stringify(apiResponse));
+</script>
